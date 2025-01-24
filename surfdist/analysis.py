@@ -233,7 +233,7 @@ def shortest_path(surf,cortex,source,target,method='dijkstra'):
 
 import pygeodesic.geodesic as geodesic
 from scipy.spatial import KDTree
-def shortest_path_pygeodesic(surf,cortex,source,target,method='dijkstra'):
+def shortest_path_pygeodesic(surf,cortex,source,target):
     """ Calculate the shortest path on the cortex using pygeodesic library. gives actual shortest geodesic path. 
     This function returns the vertices in the shortest path between two vertices on the surface.
     It does not make use of the gdist package except for in loading the anatomical files. 
@@ -248,7 +248,7 @@ def shortest_path_pygeodesic(surf,cortex,source,target,method='dijkstra'):
     geoalg = geodesic.PyGeodesicAlgorithmExact(cortex_vertices,cortex_triangles)
     distance, path = geoalg.geodesicDistance(translated_source, translated_target)
     ### the path is a list of coordinates -- bring back to vertices
-    kdtree = KDTree(verts_cort)
+    kdtree = KDTree(cortex_vertices)
     _, nearest_indices = kdtree.query(path, k=1)
 
     #### this for loop seems silly but it keeps the nodes in order in the orgiinal space
