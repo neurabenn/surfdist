@@ -198,6 +198,7 @@ def GeoDistHeuristic(verts,faces,source,target):
 
 import networkx as nx
 def shortest_path(surf,cortex,source,target,method='dijkstra'):
+    #### in the process of being deprecated #### 
     """ Calculate the shortest path on the cortex using NetworkX and dijkstra's algorithm
     This function returns the vertices in the shortest path between two vertices on the surface.
     It does not make use of the gdist package except for in loading the anatomical files. 
@@ -223,6 +224,39 @@ def shortest_path(surf,cortex,source,target,method='dijkstra'):
     for p in path:
         #### change to be the value of cort indexed by p
         precort=np.zeros(len(cortex_vertices))
+        precort[p]=1
+        precort=recort(precort,surf,cortex)
+        cortPath.append(np.where(precort==1)[0])
+    cortPath=np.hstack(cortPath)
+
+    return cortPath
+
+import pygeodesic.geodesic as geodesic
+from scipy.spatial import KDTree
+def shortest_path_pygeodesic(surf,cortex,source,target,method='dijkstra'):
+    """ Calculate the shortest path on the cortex using pygeodesic library. gives actual shortest geodesic path. 
+    This function returns the vertices in the shortest path between two vertices on the surface.
+    It does not make use of the gdist package except for in loading the anatomical files. 
+    A cortex mask is required to ensure the path does not run over the medial wall"""
+    surf=AnatomyInputParser(surf)
+    
+    cortex_vertices, cortex_triangles = surf_keep_cortex(surf, cortex)
+    ### note input the actual nodes on the true surface space -- here it's placed on medial wall free
+    translated_source = translate_src(source, cortex)[0]
+    translated_target = translate_src(target, cortex)[0]
+    ### build geodesic object with medial wall removed
+    geoalg = geodesic.PyGeodesicAlgorithmExact(cortex_vertices,cortex_triangles)
+    distance, path = geoalg.geodesicDistance(translated_source, translated_target)
+    ### the path is a list of coordinates -- bring back to vertices
+    kdtree = KDTree(verts_cort)
+    _, nearest_indices = kdtree.query(path, k=1)
+
+    #### this for loop seems silly but it keeps the nodes in order in the orgiinal space
+    ### this is key for writing annotation files later
+    cortPath=[]
+    for p in nearest_indices:
+        #### change to be the value of cort indexed by p
+        precort=np.zeros(len(cortex))
         precort[p]=1
         precort=recort(precort,surf,cortex)
         cortPath.append(np.where(precort==1)[0])
