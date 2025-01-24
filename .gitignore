@@ -1,1 +1,7 @@
 .idea
+.DS_Store
+.ipynb_checkpoints/
+examples/.DS_Store
+examples/data/
+surfdist.egg-info/
+surfdist/__pycache__/
